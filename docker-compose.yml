@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000" # Porta do NestJS
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=aonde_ir_db
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Porta do Next.js
+    environment:
+      - BACKEND_URL=http://backend:4000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app # Mapeia o código fonte do frontend
+      - /app/node_modules # Ignora os node_modules do host
+    networks:
+      - app-network
+
+  postgres:
+    container_name: postgres
+    image: postgres:14
+    ports:
+      - "5432:5432" # Porta padrão do PostgreSQL
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aonde_ir_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  postgres-data: # Persistência dos dados do PostgreSQL
+
+networks:
+  app-network:
+    driver: bridge
